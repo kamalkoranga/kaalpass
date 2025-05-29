@@ -29,15 +29,13 @@ class PasswordScreen extends StatefulWidget {
 class _PasswordScreenState extends State<PasswordScreen> {
   final String secret = 'MY_SUPER_SECRET'; // Replace with your actual secret
   String currentPassword = '';
-  Timer? timer;
+  Timer? midnightTimer;
 
   @override
   void initState() {
     super.initState();
     _updatePassword();
-    timer = Timer.periodic(Duration(minutes: 5), (_) {
-      _updatePassword();
-    });
+    _scheduleMidnightUpdate();
   }
 
   void _updatePassword() {
@@ -53,9 +51,22 @@ class _PasswordScreenState extends State<PasswordScreen> {
     });
   }
 
+  void _scheduleMidnightUpdate() {
+    final now = DateTime.now();
+    // Next midnight (start of next day)
+    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final durationUntilMidnight = nextMidnight.difference(now);
+
+    midnightTimer?.cancel();
+    midnightTimer = Timer(durationUntilMidnight, () {
+      _updatePassword();
+      _scheduleMidnightUpdate(); // Reschedule for the next midnight
+    });
+  }
+
   @override
   void dispose() {
-    timer?.cancel();
+    midnightTimer?.cancel();
     super.dispose();
   }
 
