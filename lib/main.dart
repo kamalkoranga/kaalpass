@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:home_widget/home_widget.dart';
 
 void main() {
   runApp(DailyPasswordApp());
@@ -27,6 +28,10 @@ class PasswordScreen extends StatefulWidget {
 }
 
 class _PasswordScreenState extends State<PasswordScreen> {
+  String appGroupId = "klka.kaalpass";
+  String androidWidgetName = "KaalPassWidget";
+  String dataKey = "today's_password";
+
   final String secret = 'MY_SUPER_SECRET'; // Replace with your actual secret
   String currentPassword = '';
   Timer? midnightTimer;
@@ -36,9 +41,10 @@ class _PasswordScreenState extends State<PasswordScreen> {
     super.initState();
     _updatePassword();
     _scheduleMidnightUpdate();
+    HomeWidget.setAppGroupId(appGroupId);
   }
 
-  void _updatePassword() {
+  void _updatePassword() async {
     final now = DateTime.now();
     final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final input = utf8.encode(secret + dateKey);
@@ -49,6 +55,11 @@ class _PasswordScreenState extends State<PasswordScreen> {
     setState(() {
       currentPassword = password;
     });
+
+    await HomeWidget.saveWidgetData(dataKey, password);
+    await HomeWidget.updateWidget(
+      androidName: androidWidgetName
+    );
   }
 
   void _scheduleMidnightUpdate() {
