@@ -1,121 +1,26 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:home_widget/home_widget.dart';
+import 'package:kaal_pass/pages/home_page.dart';
+import 'package:kaal_pass/themes/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(DailyPasswordApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    )
+  );
 }
 
-class DailyPasswordApp extends StatelessWidget {
-  const DailyPasswordApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Daily Password',
-      home: PasswordScreen(),
       debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class PasswordScreen extends StatefulWidget {
-  @override
-  _PasswordScreenState createState() => _PasswordScreenState();
-}
-
-class _PasswordScreenState extends State<PasswordScreen> {
-  String appGroupId = "klka.kaalpass";
-  String androidWidgetName = "KaalPassWidget";
-  String dataKey = "today's_password";
-
-  final String secret = 'MY_SUPER_SECRET'; // Replace with your actual secret
-  String currentPassword = '';
-  Timer? midnightTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _updatePassword();
-    _scheduleMidnightUpdate();
-    HomeWidget.setAppGroupId(appGroupId);
-  }
-
-  void _updatePassword() async {
-    final now = DateTime.now();
-    final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final input = utf8.encode(secret + dateKey);
-    final hash = sha256.convert(input).toString();
-
-    final password = hash.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').substring(0, 14);
-
-    setState(() {
-      currentPassword = password;
-    });
-
-    await HomeWidget.saveWidgetData(dataKey, password);
-    await HomeWidget.updateWidget(
-      androidName: androidWidgetName
-    );
-  }
-
-  void _scheduleMidnightUpdate() {
-    final now = DateTime.now();
-    // Next midnight (start of next day)
-    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    final durationUntilMidnight = nextMidnight.difference(now);
-
-    midnightTimer?.cancel();
-    midnightTimer = Timer(durationUntilMidnight, () {
-      _updatePassword();
-      _scheduleMidnightUpdate(); // Reschedule for the next midnight
-    });
-  }
-
-  @override
-  void dispose() {
-    midnightTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Today\'sPassword:', style: TextStyle(fontSize: 20)),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SelectableText(
-                  currentPassword,
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 8,),
-                IconButton(
-                  icon: Icon(Icons.copy),
-                  tooltip: 'Copy to clipboard',
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: currentPassword));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Password copied to clipboard'),
-                        duration: Duration(seconds: 1),
-                      )
-                    );
-                  },
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
+      home: const HomePage(),
+      theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }
 }
