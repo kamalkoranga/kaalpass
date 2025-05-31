@@ -1,19 +1,31 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.Android.AppWidget.Container"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@style/Theme.Android.AppWidgetContainer">
+    android:gravity="center"
+    android:background="@drawable/widget_bg"
+    android:padding="12dp">
 
+    <!-- Label -->
     <TextView
-        android:id="@+id/text_id"
-        style="@style/Widget.Android.AppWidget.InnerView"
+        android:id="@+id/label_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="8dp"
-        android:contentDescription="@string/appwidget_text"
+        android:text="Today's Password"
+        android:textColor="#BBBBBB"
+        android:textSize="12sp"
+        android:layout_marginBottom="6dp" />
+    
+    <!-- Password Display -->
+    <TextView
+        android:id="@+id/text_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/appwidget_text"
+        android:textColor="#FFFFFF"
         android:textSize="24sp"
-        android:textStyle="bold|italic" />
-</RelativeLayout>
+        android:textStyle="bold"
+        android:gravity="center"
+        android:contentDescription="Password value" />
+
+</LinearLayout>
