@@ -28,6 +28,7 @@
             android:layout_height="wrap_content">
 
             <!-- Label -->
+            <!-- CHANGE "android:text" to your linux user name -->
             <TextView
                 android:id="@+id/label_id"
                 android:layout_width="wrap_content"
