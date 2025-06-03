@@ -96,6 +96,11 @@ Now the script is configured in your machine. Now set up android app 👇.
 
 ---
 
+#### ⚠️ NOTE:
+SECRET KEY should be same in both script and app so that they can sync the same password, even if there is a change of single character then the password changed by the script will be different from what the app is showing. 
+
+---
+
 ## 💡 Widget Behavior
 - Tapping the widget:
     - Refreshes the displayed password
