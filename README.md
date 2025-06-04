@@ -1,4 +1,4 @@
-# 🔐 KaalPass – TOTP-Based Daily Password System for Linux with Android App Integration
+# 🔐 KaalPass – Linux TOTP with Android Integration
 
 **KaalPass** is a secure, TOTP-based system that automatically rotates your Linux system password every day and syncs it to an Android app (with widget support) for easy and secure access.
 
