@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:kaal_pass/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,19 +21,125 @@ class _HomePageState extends State<HomePage> {
   String androidWidgetName = "KaalPassWidget";
   String dataKey = "today's_password";
 
-  final String secret = 'MY_SUPER_SECRET'; // Replace with your actual secret
+  // SECRET KEY
+  String secret = '';
   String currentPassword = '';
   Timer? midnightTimer;
 
   @override
   void initState() {
     super.initState();
+    _loadSecret();
     _updatePassword();
     _scheduleMidnightUpdate();
     HomeWidget.setAppGroupId(appGroupId);
   }
 
+  // Load the secret key from shared preferences or
+  // prompt the user to enter it
+  Future<void> _loadSecret() async {
+    final prefs = await SharedPreferences.getInstance();
+    secret = prefs.getString('secret_key') ?? '';
+    if (secret.isEmpty) {
+      _promptForSecret();
+    } else {
+      _updatePassword();
+      _scheduleMidnightUpdate();
+    }
+  }
+
+  // Save the secret key to shared preferences
+  Future<void> _saveSecret(String newSecret) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('secret_key', newSecret);
+    setState(() {
+      secret = newSecret;
+    });
+    _updatePassword();
+    _scheduleMidnightUpdate();
+  }
+
+  // Prompt the user to enter the secret key
+  // and save it to shared preferences
+  void _promptForSecret() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Enter Secret Key'),
+            SizedBox(height: 8.0),
+            (secret.isNotEmpty)
+                ? Text(
+                    'Current Secret Key: $secret',
+                    style: TextStyle(
+                      fontSize: 14, color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6)),
+                  )
+                : Container(),
+          ],
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              obscureText: false,
+              enableSuggestions: false,
+              autocorrect: false,
+              autofillHints: null,
+              decoration: InputDecoration(hintText: 'Secret Key'),
+            ),
+            SizedBox(height: 24.0),
+            Text(
+              'This key will be used to generate your daily password. It should be same as the one used in the bash script.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Theme.of(context).colorScheme.primaryFixedDim),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                _saveSecret(controller.text.trim());
+                Navigator.of(context).pop();
+              }
+            },
+            child: Text(
+              'Save',
+              style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Generate the password based on the secret key and today's date
   void _updatePassword() async {
+    if (secret.isEmpty) {return;}
     final now = DateTime.now();
     final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final input = utf8.encode(secret + dateKey);
@@ -50,6 +157,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Schedule the password update at midnight every day
   void _scheduleMidnightUpdate() {
     final now = DateTime.now();
     // Next midnight (start of next day)
@@ -74,11 +182,48 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       drawer: Drawer(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        child: Center(
-          child: CupertinoSwitch(
-            value: Provider.of<ThemeProvider>(context).isDarkMode,
-            onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme()
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Dark Mode: ',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(width: 16,),
+                CupertinoSwitch(
+                  value: Provider.of<ThemeProvider>(context).isDarkMode,
+                  onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme()
+                ),
+              ],
+            ),
+            SizedBox(height: 20,),
+            GestureDetector(
+              onTap: () {
+                // Navigator.of(context).pop();
+                _promptForSecret();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+                child: Text(
+                  'Change Secret Key',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 16
+                  )
+                )
+              ),
+            ),
+          ]
         ),
       ),
       body: Center(
