@@ -61,14 +61,40 @@ class _HomePageState extends State<HomePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Enter Secret Key'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Enter Secret Key'),
+            SizedBox(height: 8.0),
+            (secret.isNotEmpty)
+                ? Text(
+                    'Current Secret Key: $secret',
+                    style: TextStyle(
+                      fontSize: 14, color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6)),
+                  )
+                : Container(),
+          ],
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
-        content: TextField(
-          controller: controller,
-          obscureText: false,
-          decoration: InputDecoration(hintText: 'Secret Key'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              obscureText: false,
+              decoration: InputDecoration(hintText: 'Secret Key'),
+            ),
+            SizedBox(height: 24.0),
+            Text(
+              'This key will be used to generate your daily password. It should be same as the one used in the bash script.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -148,12 +174,41 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CupertinoSwitch(
-              value: Provider.of<ThemeProvider>(context).isDarkMode,
-              onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme()
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Dark Mode: ',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(width: 16,),
+                CupertinoSwitch(
+                  value: Provider.of<ThemeProvider>(context).isDarkMode,
+                  onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme()
+                ),
+              ],
             ),
             SizedBox(height: 20,),
-            ElevatedButton(onPressed: _promptForSecret, child: Text('Change Secret Key')),
+            ElevatedButton(
+              onPressed: _promptForSecret,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.tertiary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: Text(
+                'Change Secret Key',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                  fontSize: 16
+                )
+              )
+            ),
           ]
         ),
       ),
