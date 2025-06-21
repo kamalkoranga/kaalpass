@@ -21,12 +21,36 @@
 ## 🛠️ Setup
 
 ### 💻 Linux (TOTP & Password Rotation)
-1. Download [kaalpass.sh](https://github.com/kamalkoranga/kaalpass/releases/latest/download/script.sh) by running following command:<br>
+1. Download **kaalpass.sh** (bash script to set system password) by running following command:<br>
     ```bash
     wget -O kaalpass.sh https://github.com/kamalkoranga/kaalpass/releases/latest/download/script.sh
     ```
 
-2. Populate the **kaalpass.sh** with your custom values like *USERNAME* and *SECRET*.
+2. Populate the **kaalpass.sh** with your custom values.
+    ```bash
+    #!/bin/bash
+
+    # Replace with your linux username
+    USERNAME="YOUR_USERNAME"
+
+    # Same as in the Flutter app
+    SECRET="YOUR_SUPER_SECRET"
+
+    # Generate today's UTC date string
+    DATE_KEY=$(date +%Y-%m-%d)
+
+    # Generate SHA256 hash
+    PASSWORD_HASH=$(echo -n "$SECRET$DATE_KEY" | sha256sum | awk '{print $1}')
+
+    # Extract 14-character alphanumeric password
+    PASSWORD=$(echo "$PASSWORD_HASH" | tr -cd '[:alnum:]' | cut -c1-14)
+
+    # Test: Print the password
+    #echo "Generated password for $USERNAME: $PASSWORD"
+
+    # Set the user's password
+    echo "$USERNAME:$PASSWORD" | sudo chpasswd
+    ```
 
 3. Save this file in ```/usr/local/bin``` by running following command:<br>
     ```bash
@@ -62,37 +86,28 @@ Now the script is configured in your machine. Now set up android app 👇.
 
 
 ### 📱Android App (APK)
-1. Make sure you have flutter installed if not then install from [here](https://flutter.dev).
+You can now install the Android app directly without building it manually.
 
-2. Clone the repo:<br>
-   ```bash
-   git clone https://github.com/kamalkoranga/kaalpass.git
-   ```
+#### ✅ Steps to Use the App:
 
-3. Update the **secret variable** in [home_page.dart](/lib/pages/home_page.dart):Line 23 that is ```final String secret = 'MY_SUPER_SECRET';``` with the same secret key that had in your ```/usr/local/bin/kaalpass.sh``` file.
+1. **Download the APK:**
+    - 📦 [Download app-release.apk](https://github.com/kamalkoranga/kaalpass/releases/latest/download/app-release.apk)
 
-4. Change the linux username to your linux username in [kaal_pass_widget](/android/app/src/main/res/layout/kaal_pass_widget.xml): Line 36 that is ```android:text="YOUR_LINUX_USERNAME's Password"```
+2. **Install on your Android device:**
+    - Transfer the APK file to your device.
+    - Enable Install unknown apps in your device settings if prompted.
+    - Tap the APK to install the app.
 
-5. Install flutter packages:<br>
-    ```bash
-    flutter pub get
-    ```
+3. **Configure the App:**
+    - On first launch, the app will ask for a Secret Key.
+    - Enter the exact same secret key used in your Linux script (/usr/local/bin/kaalpass.sh) so that passwords sync correctly.
 
-6. Build your apk by running following command:<br>
-    ```bash
-    flutter build apk --release
-    ```
-    This generates a release APK in:<br>
-    ```bash
-    build/app/outputs/flutter-apk/app-release.apk
-    ```
+4. **View Your Password:**
+    - The app will show the auto-updating daily password based on your configured secret.
+    - You can also change the secret later from the app’s left sidebar(swipe right from left side).
 
-7. Transfer the APK to your Android device.
-    Enable Install unknown apps permission in your device settings if not already enabled.
-    Open the APK file to install the app.
-    Once installed, open the app to view today's password synced with your Linux system.
 
-**| Tip**:  Create a widget of it to directly access your today's password.
+**| Tip**:  Create a widget of it to directly access your today's password from homescreen.
 
 ---
 
