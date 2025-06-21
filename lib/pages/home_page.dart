@@ -21,7 +21,8 @@ class _HomePageState extends State<HomePage> {
   String androidWidgetName = "KaalPassWidget";
   String dataKey = "today's_password";
 
-  String secret = ''; // Replace with your actual secret
+  // SECRET KEY
+  String secret = '';
   String currentPassword = '';
   Timer? midnightTimer;
 
@@ -34,6 +35,8 @@ class _HomePageState extends State<HomePage> {
     HomeWidget.setAppGroupId(appGroupId);
   }
 
+  // Load the secret key from shared preferences or
+  // prompt the user to enter it
   Future<void> _loadSecret() async {
     final prefs = await SharedPreferences.getInstance();
     secret = prefs.getString('secret_key') ?? '';
@@ -45,6 +48,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Save the secret key to shared preferences
   Future<void> _saveSecret(String newSecret) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('secret_key', newSecret);
@@ -55,6 +59,8 @@ class _HomePageState extends State<HomePage> {
     _scheduleMidnightUpdate();
   }
 
+  // Prompt the user to enter the secret key
+  // and save it to shared preferences
   void _promptForSecret() {
     final controller = TextEditingController();
     showDialog(
@@ -131,6 +137,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Generate the password based on the secret key and today's date
   void _updatePassword() async {
     if (secret.isEmpty) {return;}
     final now = DateTime.now();
@@ -150,6 +157,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Schedule the password update at midnight every day
   void _scheduleMidnightUpdate() {
     final now = DateTime.now();
     // Next midnight (start of next day)
