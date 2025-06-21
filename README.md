@@ -30,11 +30,12 @@
     ```bash
     #!/bin/bash
 
-    # Replace with your linux username
+    # Replace with your linux username(check with `whoami`)
     USERNAME="YOUR_USERNAME"
 
-    # Same as in the Flutter app
-    SECRET="YOUR_SUPER_SECRET"
+    # This is your secret key, change it to something secure
+    # This key will be used to generate the password
+    SECRET="YOUR_SECRET_KEY"
 
     # Generate today's UTC date string
     DATE_KEY=$(date +%Y-%m-%d)
