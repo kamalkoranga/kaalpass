@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               'Cancel',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              style: TextStyle(color: Theme.of(context).colorScheme.primaryFixedDim),
             ),
           ),
           ElevatedButton(
@@ -192,14 +192,16 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             SizedBox(height: 20,),
-            ElevatedButton(
-              onPressed: _promptForSecret,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.tertiary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            GestureDetector(
+              onTap: () {
+                // Navigator.of(context).pop();
+                _promptForSecret();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(6.0),
               ),
               child: Text(
                 'Change Secret Key',
@@ -208,6 +210,7 @@ class _HomePageState extends State<HomePage> {
                   fontSize: 16
                 )
               )
+              ),
             ),
           ]
         ),
