@@ -84,6 +84,9 @@ class _HomePageState extends State<HomePage> {
             TextField(
               controller: controller,
               obscureText: false,
+              enableSuggestions: false,
+              autocorrect: false,
+              autofillHints: null,
               decoration: InputDecoration(hintText: 'Secret Key'),
             ),
             SizedBox(height: 24.0),
@@ -202,14 +205,14 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.tertiary,
                   borderRadius: BorderRadius.circular(6.0),
-              ),
-              child: Text(
-                'Change Secret Key',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  fontSize: 16
+                ),
+                child: Text(
+                  'Change Secret Key',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 16
+                  )
                 )
-              )
               ),
             ),
           ]
