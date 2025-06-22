@@ -1609,7 +1609,7 @@ label {
 }
 
 .media .section-inner {
-    padding-bottom: 104px
+    /* padding-bottom: 104px */
 }
 
 .media .section-paragraph {
@@ -1653,7 +1653,7 @@ label {
 
 @media (min-width: 641px) {
     .media .section-inner {
-        padding-bottom: 144px
+        /* padding-bottom: 144px */
     }
 
     .media .section-paragraph {
@@ -1744,7 +1744,7 @@ main {
     flex: 1 0 auto
 }
 
-.section-inner {
+. {
     position: relative;
     padding-top: 48px;
     padding-bottom: 48px
@@ -1753,7 +1753,11 @@ main {
 @media (min-width: 641px) {
     .section-inner {
         padding-top: 80px;
-        padding-bottom: 80px
+        padding-bottom: 80px;
+    }
+
+    .media .section-inner {
+        padding-bottom: 0;
     }
 }
 
