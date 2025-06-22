@@ -1,6 +1,13 @@
+<div align="">
+
+[![Latest Release](https://img.shields.io/github/v/release/kamalkoranga/kaalpass?label=Latest%20Release&logo=github)](https://github.com/kamalkoranga/kaalpass/releases/latest)
+
+</div>
+
 # 🔐 KaalPass – Linux TOTP with Android Integration
 
 **KaalPass** is a secure, TOTP-based system that automatically rotates your Linux system password every day and syncs it to an Android app (with widget support) for easy and secure access.
+
 
 ---
 
@@ -21,6 +28,9 @@
 ## 🛠️ Setup
 
 ### 💻 Linux (TOTP & Password Rotation)
+
+> **Note:** This script has been tested on Fedora 42, but it is expected to work on all Ubuntu-based distributions as well. Minor adjustments may be needed depending on your system.
+
 1. Download **kaalpass.sh** (bash script to set system password) by running following command:<br>
     ```bash
     wget -O kaalpass.sh https://github.com/kamalkoranga/kaalpass/releases/latest/download/script.sh
