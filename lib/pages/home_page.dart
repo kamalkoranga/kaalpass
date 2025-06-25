@@ -17,11 +17,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String appGroupId = "klka.kaalpass";
-  String androidWidgetName = "KaalPassWidget";
-  String dataKey = "today's_password";
+  static const String appGroupId = "klka.kaalpass";
+  static const String androidWidgetName = "KaalPassWidget";
+  static const String dataKey = "today's_password";
 
-  // SECRET KEY
   String secret = '';
   String currentPassword = '';
   Timer? midnightTimer;
@@ -30,13 +29,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadSecret();
-    _updatePassword();
-    _scheduleMidnightUpdate();
     HomeWidget.setAppGroupId(appGroupId);
   }
 
-  // Load the secret key from shared preferences or
-  // prompt the user to enter it
   Future<void> _loadSecret() async {
     final prefs = await SharedPreferences.getInstance();
     secret = prefs.getString('secret_key') ?? '';
@@ -48,7 +43,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Save the secret key to shared preferences
   Future<void> _saveSecret(String newSecret) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('secret_key', newSecret);
@@ -59,28 +53,13 @@ class _HomePageState extends State<HomePage> {
     _scheduleMidnightUpdate();
   }
 
-  // Prompt the user to enter the secret key
-  // and save it to shared preferences
   void _promptForSecret() {
     final controller = TextEditingController();
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Enter Secret Key'),
-            SizedBox(height: 8.0),
-            (secret.isNotEmpty)
-                ? Text(
-                    'Current Secret Key: $secret',
-                    style: TextStyle(
-                      fontSize: 14, color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6)),
-                  )
-                : Container(),
-          ],
-        ),
+        title: Text('Enter Secret Key'),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
@@ -92,15 +71,14 @@ class _HomePageState extends State<HomePage> {
               obscureText: false,
               enableSuggestions: false,
               autocorrect: false,
-              autofillHints: null,
               decoration: InputDecoration(hintText: 'Secret Key'),
             ),
             SizedBox(height: 24.0),
             Text(
-              'This key will be used to generate your daily password. It should be same as the one used in the bash script.',
+              'This key will be used to generate your daily password. It should be the same as the one used in the bash script.',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6),
+                color: Theme.of(context).colorScheme.inversePrimary.withOpacity(0.6),
               ),
             ),
           ],
@@ -137,14 +115,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Generate the password based on the secret key and today's date
   void _updatePassword() async {
-    if (secret.isEmpty) {return;}
+    if (secret.isEmpty) return;
     final now = DateTime.now();
     final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final input = utf8.encode(secret + dateKey);
     final hash = sha256.convert(input).toString();
-
     final password = hash.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').substring(0, 14);
 
     setState(() {
@@ -152,22 +128,18 @@ class _HomePageState extends State<HomePage> {
     });
 
     await HomeWidget.saveWidgetData(dataKey, password);
-    await HomeWidget.updateWidget(
-      androidName: androidWidgetName
-    );
+    await HomeWidget.updateWidget(androidName: androidWidgetName);
   }
 
-  // Schedule the password update at midnight every day
   void _scheduleMidnightUpdate() {
     final now = DateTime.now();
-    // Next midnight (start of next day)
     final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
     final durationUntilMidnight = nextMidnight.difference(now);
 
     midnightTimer?.cancel();
     midnightTimer = Timer(durationUntilMidnight, () {
       _updatePassword();
-      _scheduleMidnightUpdate(); // Reschedule for the next midnight
+      _scheduleMidnightUpdate();
     });
   }
 
@@ -204,10 +176,7 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 20,),
             GestureDetector(
-              onTap: () {
-                // Navigator.of(context).pop();
-                _promptForSecret();
-              },
+              onTap: _promptForSecret,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
