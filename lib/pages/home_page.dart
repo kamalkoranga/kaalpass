@@ -1,13 +1,8 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:home_widget/home_widget.dart';
-import 'package:kaal_pass/themes/theme_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kaal_pass/services/password_service.dart';
+import 'package:kaal_pass/widgets/my_drawer.dart';
+import 'package:kaal_pass/widgets/password_display.dart';
+import 'package:kaal_pass/widgets/secret_key_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,255 +12,43 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String appGroupId = "klka.kaalpass";
-  String androidWidgetName = "KaalPassWidget";
-  String dataKey = "today's_password";
-
-  // SECRET KEY
-  String secret = '';
-  String currentPassword = '';
-  Timer? midnightTimer;
+  late PasswordService passwordService;
 
   @override
   void initState() {
     super.initState();
-    _loadSecret();
-    _updatePassword();
-    _scheduleMidnightUpdate();
-    HomeWidget.setAppGroupId(appGroupId);
-  }
-
-  // Load the secret key from shared preferences or
-  // prompt the user to enter it
-  Future<void> _loadSecret() async {
-    final prefs = await SharedPreferences.getInstance();
-    secret = prefs.getString('secret_key') ?? '';
-    if (secret.isEmpty) {
-      _promptForSecret();
-    } else {
-      _updatePassword();
-      _scheduleMidnightUpdate();
-    }
-  }
-
-  // Save the secret key to shared preferences
-  Future<void> _saveSecret(String newSecret) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('secret_key', newSecret);
-    setState(() {
-      secret = newSecret;
+    passwordService = PasswordService(onPasswordUpdated: () {
+      setState(() {});
     });
-    _updatePassword();
-    _scheduleMidnightUpdate();
-  }
-
-  // Prompt the user to enter the secret key
-  // and save it to shared preferences
-  void _promptForSecret() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Enter Secret Key'),
-            SizedBox(height: 8.0),
-            (secret.isNotEmpty)
-                ? Text(
-                    'Current Secret Key: $secret',
-                    style: TextStyle(
-                      fontSize: 14, color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6)),
-                  )
-                : Container(),
-          ],
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              obscureText: false,
-              enableSuggestions: false,
-              autocorrect: false,
-              autofillHints: null,
-              decoration: InputDecoration(hintText: 'Secret Key'),
-            ),
-            SizedBox(height: 24.0),
-            Text(
-              'This key will be used to generate your daily password. It should be same as the one used in the bash script.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Theme.of(context).colorScheme.primaryFixedDim),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.tertiary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                _saveSecret(controller.text.trim());
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(
-              'Save',
-              style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Generate the password based on the secret key and today's date
-  void _updatePassword() async {
-    if (secret.isEmpty) {return;}
-    final now = DateTime.now();
-    final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final input = utf8.encode(secret + dateKey);
-    final hash = sha256.convert(input).toString();
-
-    final password = hash.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').substring(0, 14);
-
-    setState(() {
-      currentPassword = password;
-    });
-
-    await HomeWidget.saveWidgetData(dataKey, password);
-    await HomeWidget.updateWidget(
-      androidName: androidWidgetName
-    );
-  }
-
-  // Schedule the password update at midnight every day
-  void _scheduleMidnightUpdate() {
-    final now = DateTime.now();
-    // Next midnight (start of next day)
-    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    final durationUntilMidnight = nextMidnight.difference(now);
-
-    midnightTimer?.cancel();
-    midnightTimer = Timer(durationUntilMidnight, () {
-      _updatePassword();
-      _scheduleMidnightUpdate(); // Reschedule for the next midnight
-    });
+    passwordService.init();
   }
 
   @override
   void dispose() {
-    midnightTimer?.cancel();
+    passwordService.dispose();
     super.dispose();
+  }
+
+  void _promptForSecret() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => SecretKeyDialog(
+        onSecretSaved: (secret) => passwordService.saveSecret(secret),
+        currentSecret: passwordService.getSecret(),
+      ),
+    );
+
+    
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Dark Mode: ',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(width: 16,),
-                CupertinoSwitch(
-                  value: Provider.of<ThemeProvider>(context).isDarkMode,
-                  onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme()
-                ),
-              ],
-            ),
-            SizedBox(height: 20,),
-            GestureDetector(
-              onTap: () {
-                // Navigator.of(context).pop();
-                _promptForSecret();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  borderRadius: BorderRadius.circular(6.0),
-                ),
-                child: Text(
-                  'Change Secret Key',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 16
-                  )
-                )
-              ),
-            ),
-          ]
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Today\'s Password',
-              style: TextStyle(
-                fontSize: 20
-              ),
-            ),
-            SizedBox(height: 10,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SelectableText(
-                  currentPassword,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-                SizedBox(width: 8,),
-                IconButton(
-                 icon: Icon(Icons.copy),
-                 tooltip: 'Copy to Clipboard',
-                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: currentPassword));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Password copied to clipboard'),
-                      duration: Duration(seconds: 1),
-                    )
-                  );
-                 }, 
-                )
-              ],
-            )
-          ],
-        ),
-      ),
+      appBar: AppBar(elevation: 0,),
+      drawer: MyDrawer(_promptForSecret),
+      body: PasswordDisplay(password: passwordService.currentPassword),
     );
   }
 }
+
