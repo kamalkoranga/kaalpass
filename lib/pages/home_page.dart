@@ -1,11 +1,8 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:home_widget/home_widget.dart';
+import 'package:kaal_pass/services/password_service.dart';
 import 'package:kaal_pass/widgets/my_drawer.dart';
 import 'package:kaal_pass/widgets/password_display.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kaal_pass/widgets/secret_key_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,145 +12,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const String appGroupId = "klka.kaalpass";
-  static const String androidWidgetName = "KaalPassWidget";
-  static const String dataKey = "today's_password";
-
-  String secret = '';
-  String currentPassword = '';
-  Timer? midnightTimer;
+  late PasswordService passwordService;
 
   @override
   void initState() {
     super.initState();
-    _loadSecret();
-    HomeWidget.setAppGroupId(appGroupId);
-  }
-
-  Future<void> _loadSecret() async {
-    final prefs = await SharedPreferences.getInstance();
-    secret = prefs.getString('secret_key') ?? '';
-    if (secret.isEmpty) {
-      _promptForSecret();
-    } else {
-      _updatePassword();
-      _scheduleMidnightUpdate();
-    }
-  }
-
-  Future<void> _saveSecret(String newSecret) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('secret_key', newSecret);
-    setState(() {
-      secret = newSecret;
+    passwordService = PasswordService(onPasswordUpdated: () {
+      setState(() {});
     });
-    _updatePassword();
-    _scheduleMidnightUpdate();
-  }
-
-  void _promptForSecret() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text('Enter Secret Key'),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (secret.isNotEmpty)
-                Text(
-                'Current Secret Key: $secret',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.inversePrimary.withAlpha(153), // 0.6 * 255 ≈ 153
-                ),
-              ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: controller,
-              obscureText: false,
-              enableSuggestions: false,
-              autocorrect: false,
-              decoration: InputDecoration(hintText: 'Secret Key'),
-            ),
-            SizedBox(height: 24.0),
-            Text(
-              'This key will be used to generate your daily password. It should be the same as the one used in the bash script.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.inversePrimary.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Theme.of(context).colorScheme.primaryFixedDim),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.tertiary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                _saveSecret(controller.text.trim());
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(
-              'Save',
-              style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _updatePassword() async {
-    if (secret.isEmpty) return;
-    final now = DateTime.now();
-    final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final input = utf8.encode(secret + dateKey);
-    final hash = sha256.convert(input).toString();
-    final password = hash.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').substring(0, 14);
-
-    setState(() {
-      currentPassword = password;
-    });
-
-    await HomeWidget.saveWidgetData(dataKey, password);
-    await HomeWidget.updateWidget(androidName: androidWidgetName);
-  }
-
-  void _scheduleMidnightUpdate() {
-    final now = DateTime.now();
-    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    final durationUntilMidnight = nextMidnight.difference(now);
-
-    midnightTimer?.cancel();
-    midnightTimer = Timer(durationUntilMidnight, () {
-      _updatePassword();
-      _scheduleMidnightUpdate();
-    });
+    passwordService.init();
   }
 
   @override
   void dispose() {
-    midnightTimer?.cancel();
+    passwordService.dispose();
     super.dispose();
+  }
+
+  void _promptForSecret() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => SecretKeyDialog(
+        onSecretSaved: (secret) => passwordService.saveSecret(secret),
+        currentSecret: passwordService.getSecret(),
+      ),
+    );
+
+    
   }
 
   @override
@@ -161,7 +47,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(elevation: 0,),
       drawer: MyDrawer(_promptForSecret),
-      body: PasswordDisplay(currentPassword: currentPassword),
+      body: PasswordDisplay(password: passwordService.currentPassword),
     );
   }
 }
