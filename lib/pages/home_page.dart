@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:kaal_pass/widgets/my_drawer.dart';
+import 'package:kaal_pass/widgets/password_display.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -159,49 +159,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-      ),
+      appBar: AppBar(elevation: 0,),
       drawer: MyDrawer(_promptForSecret),
-      body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Today\'s Password',
-              style: TextStyle(
-                fontSize: 20
-              ),
-            ),
-            SizedBox(height: 10,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SelectableText(
-                  currentPassword,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-                SizedBox(width: 8,),
-                IconButton(
-                 icon: Icon(Icons.copy),
-                 tooltip: 'Copy to Clipboard',
-                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: currentPassword));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Password copied to clipboard'),
-                      duration: Duration(seconds: 1),
-                    )
-                  );
-                 }, 
-                )
-              ],
-            ),
-            SizedBox(height: 100,),
-          ],
-        ),
-      );
+      body: PasswordDisplay(currentPassword: currentPassword),
+    );
   }
 }
+
