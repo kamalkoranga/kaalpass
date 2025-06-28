@@ -36,6 +36,11 @@ class PasswordService {
     _scheduleMidnightUpdate();
   }
 
+  String getSecret() {
+    return secret;
+  }
+
+
   void _updatePassword() async {
     if (secret.isEmpty) return;
     final now = DateTime.now();
