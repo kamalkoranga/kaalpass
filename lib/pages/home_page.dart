@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:kaal_pass/components/my_drawer.dart';
+import 'package:kaal_pass/widgets/my_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -64,6 +64,15 @@ class _HomePageState extends State<HomePage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (secret.isNotEmpty)
+                Text(
+                'Current Secret Key: $secret',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.inversePrimary.withAlpha(153), // 0.6 * 255 ≈ 153
+                ),
+              ),
+            SizedBox(height: 16.0),
             TextField(
               controller: controller,
               obscureText: false,
