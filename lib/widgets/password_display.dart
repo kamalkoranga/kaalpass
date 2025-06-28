@@ -1,55 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 class PasswordDisplay extends StatelessWidget {
-  const PasswordDisplay({
-    super.key,
-    required this.currentPassword,
-  });
+  final String password;
 
-  final String currentPassword;
+  const PasswordDisplay({super.key, required this.password});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Center(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            'Today\'s Password',
-            style: TextStyle(
-              fontSize: 20
-            ),
-          ),
-          SizedBox(height: 10,),
+        children: [
+          Text("Today's Password", style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SelectableText(
-                currentPassword,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold
-                ),
+                password,
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
-              SizedBox(width: 8,),
+              const SizedBox(width: 8),
               IconButton(
-               icon: Icon(Icons.copy),
-               tooltip: 'Copy to Clipboard',
-               onPressed: () {
-                Clipboard.setData(ClipboardData(text: currentPassword));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Password copied to clipboard'),
-                    duration: Duration(seconds: 1),
-                  )
-                );
-               }, 
-              )
+                icon: Icon(Icons.copy),
+                tooltip: 'Copy to Clipboard',
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: password));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password copied to clipboard'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
-          SizedBox(height: 100,),
         ],
-      );
+      ),
+    );
   }
 }
