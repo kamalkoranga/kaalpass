@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:kaal_pass/themes/theme_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:kaal_pass/components/my_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -152,51 +150,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Dark Mode: ',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(width: 16,),
-                CupertinoSwitch(
-                  value: Provider.of<ThemeProvider>(context).isDarkMode,
-                  onChanged: (value) => Provider.of<ThemeProvider>(context, listen: false).toggleTheme()
-                ),
-              ],
-            ),
-            SizedBox(height: 20,),
-            GestureDetector(
-              onTap: _promptForSecret,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  borderRadius: BorderRadius.circular(6.0),
-                ),
-                child: Text(
-                  'Change Secret Key',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 16
-                  )
-                )
-              ),
-            ),
-          ]
-        ),
+      appBar: AppBar(
+        elevation: 0,
       ),
-      body: Center(
-        child: Column(
+      drawer: MyDrawer(_promptForSecret),
+      body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
@@ -231,10 +189,10 @@ class _HomePageState extends State<HomePage> {
                  }, 
                 )
               ],
-            )
+            ),
+            SizedBox(height: 100,),
           ],
         ),
-      ),
-    );
+      );
   }
 }
