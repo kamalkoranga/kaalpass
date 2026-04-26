@@ -47,7 +47,10 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(elevation: 0,),
       drawer: MyDrawer(_promptForSecret),
-      body: PasswordDisplay(password: passwordService.currentPassword),
+      body: PasswordDisplay(
+        password: passwordService.currentPassword,
+        secondsRemaining: passwordService.remainingSeconds,
+      ),
     );
   }
 }
