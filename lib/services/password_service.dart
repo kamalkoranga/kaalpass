@@ -13,7 +13,8 @@ class PasswordService {
 
   String secret = '';
   String currentPassword = '';
-  Timer? _midnightTimer;
+  Timer? _rotationTimer;
+  int? _lastWindowKey;
   final VoidCallback onPasswordUpdated;
 
   PasswordService({required this.onPasswordUpdated});
@@ -24,7 +25,7 @@ class PasswordService {
     secret = prefs.getString('secret_key') ?? '';
     if (secret.isNotEmpty) {
       _updatePassword();
-      _scheduleMidnightUpdate();
+      _startPasswordTicker();
     }
   }
 
@@ -33,40 +34,53 @@ class PasswordService {
     await prefs.setString('secret_key', newSecret);
     secret = newSecret;
     _updatePassword();
-    _scheduleMidnightUpdate();
+    _startPasswordTicker();
   }
 
   String getSecret() {
     return secret;
   }
 
+  int get remainingSeconds {
+    final now = DateTime.now().toUtc();
+    final elapsedSeconds = now.millisecondsSinceEpoch ~/ 1000;
+    final remainder = elapsedSeconds % 30;
+    return remainder == 0 ? 30 : 30 - remainder;
+  }
+
 
   void _updatePassword() async {
     if (secret.isEmpty) return;
-    final now = DateTime.now();
-    final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final input = utf8.encode(secret + dateKey);
+    final timeWindowKey = _currentWindowKey().toString();
+    final input = utf8.encode(secret + timeWindowKey);
     final hash = sha256.convert(input).toString();
     currentPassword = hash.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').substring(0, 14);
+    _lastWindowKey = int.parse(timeWindowKey);
     onPasswordUpdated();
 
     await HomeWidget.saveWidgetData(dataKey, currentPassword);
     await HomeWidget.updateWidget(androidName: androidWidgetName);
   }
 
-  void _scheduleMidnightUpdate() {
-    final now = DateTime.now();
-    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
-    final duration = nextMidnight.difference(now);
+  int _currentWindowKey() {
+    return DateTime.now().toUtc().millisecondsSinceEpoch ~/ 30000;
+  }
 
-    _midnightTimer?.cancel();
-    _midnightTimer = Timer(duration, () {
-      _updatePassword();
-      _scheduleMidnightUpdate();
+  void _startPasswordTicker() {
+    _rotationTimer?.cancel();
+    _rotationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (secret.isEmpty) return;
+
+      final windowKey = _currentWindowKey();
+      if (_lastWindowKey != windowKey) {
+        _updatePassword();
+      } else {
+        onPasswordUpdated();
+      }
     });
   }
 
   void dispose() {
-    _midnightTimer?.cancel();
+    _rotationTimer?.cancel();
   }
 }
